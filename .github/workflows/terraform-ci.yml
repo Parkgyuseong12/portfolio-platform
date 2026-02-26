@@ -1,0 +1,45 @@
+name: Terraform CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  fmt:
+    name: terraform fmt -check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Run terraform fmt check
+        run: terraform fmt -check -recursive
+        working-directory: landing-zone
+
+  validate:
+    name: terraform validate
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env_dir:
+          - landing-zone/envs/dev
+          - landing-zone/envs/prod
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        run: terraform init -backend=false
+        working-directory: ${{ matrix.env_dir }}
+
+      - name: Terraform validate
+        run: terraform validate
+        working-directory: ${{ matrix.env_dir }}
